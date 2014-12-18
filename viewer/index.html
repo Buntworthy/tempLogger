@@ -24,11 +24,12 @@
         <script type="text/javascript">
 
             var dataset;
-            dataset = [ 5, 10, 15, 20, 25 ];
 
-            var w = 500;
+            var w = 800;
             var h = 200;
-            var barPadding = 1;
+            var barPadding = 2;
+
+            var yScale;
 
             d3.csv("data.csv", 
                 function(error, data) {
@@ -39,15 +40,24 @@
 
 
                         dataset = data;
-                        //dataset = [ 5, 10, 15, 20, 25 ];
-                        console.log(dataset)
-                        generateBars(dataset)
+                        console.log(dataset);
+                        generateScales();
+                        generateBars();
 
                     }
                 }
             );
 
-            function generateBars(dataset){
+            function generateScales(){
+
+                 yScale = d3.scale.linear()
+                    .domain([d3.min(dataset, function(d) { return d.Temperature; }),
+                                d3.max(dataset, function(d) { return d.Temperature; })])
+                    .range([0, h]);
+
+            }
+
+            function generateBars(){
 
                 var svg = d3.select("body")
                     .append("svg")
@@ -64,11 +74,11 @@
                     .attr("width",w / dataset.length - barPadding)
                     .attr("fill", "teal")
                     .attr("y", function(d){
-                        return h - 100*(d.Temperature-18);
+                        return h - yScale(d.Temperature);
                     })
                     .attr("height", function(d,i){
-                        console.log(d.Temperature-18);
-                        return 100*(d.Temperature-18);
+                        console.log(d.Temperature);
+                        return yScale(d.Temperature);
                     })
                     .attr("x", function(d,i) {
                         return i*(w/dataset.length);
