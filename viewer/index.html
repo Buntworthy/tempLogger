@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Page Template</title>
+        <script type="text/javascript" src="d3/d3.js"></script>
+
+        <style type="text/css">
+
+            div.bar {
+                display: inline-block;
+                width: 20px;
+                height: 75px;   /* We'll override height later */
+                background-color: teal;
+                margin-right: 2px;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+        <script type="text/javascript">
+
+            var dataset;
+            dataset = [ 5, 10, 15, 20, 25 ];
+
+            var w = 500;
+            var h = 200;
+            var barPadding = 1;
+
+            d3.csv("data.csv", 
+                function(error, data) {
+                    if (error){
+                        // Log the error
+                        console.log(error);
+                    } else {
+
+
+                        dataset = data;
+                        //dataset = [ 5, 10, 15, 20, 25 ];
+                        console.log(dataset)
+                        generateBars(dataset)
+
+                    }
+                }
+            );
+
+            function generateBars(dataset){
+
+                var svg = d3.select("body")
+                    .append("svg")
+                    .attr("width",w)
+                    .attr("height",h);
+
+                svg.selectAll("rect")
+                    .data(dataset)
+                    .enter()
+                    .append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("height",h)
+                    .attr("width",w / dataset.length - barPadding)
+                    .attr("fill", "teal")
+                    .attr("y", function(d){
+                        return h - 100*(d.Temperature-18);
+                    })
+                    .attr("height", function(d,i){
+                        console.log(d.Temperature-18);
+                        return 100*(d.Temperature-18);
+                    })
+                    .attr("x", function(d,i) {
+                        return i*(w/dataset.length);
+                    })
+                    ;
+
+            };
+
+        </script>
+    </body>
+
+</html>
