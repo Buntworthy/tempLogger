@@ -16,6 +16,12 @@
                 margin-right: 2px;
             }
 
+            path { 
+                stroke: steelblue;
+                stroke-width: 2;
+                fill: none;
+            }
+
         </style>
 
     </head>
@@ -31,6 +37,10 @@
 
             var yScale;
 
+            // Doesn't work?
+            //var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S.%L000").parse;
+
+
             d3.csv("data.csv", 
                 function(error, data) {
                     if (error){
@@ -38,11 +48,15 @@
                         console.log(error);
                     } else {
 
+                        data.forEach(function(d) {
+                            d.Time = new Date(d.Time);
+                        });
+
 
                         dataset = data;
                         console.log(dataset);
                         generateScales();
-                        generateBars();
+                        generateLine();
 
                     }
                 }
@@ -50,10 +64,32 @@
 
             function generateScales(){
 
-                 yScale = d3.scale.linear()
-                    .domain([d3.min(dataset, function(d) { return d.Temperature; }),
+                yScale = d3.scale.linear()
+                    .domain([d3.min(dataset, function(d) { return d.Temperature; }) - 1,
                                 d3.max(dataset, function(d) { return d.Temperature; })])
-                    .range([0, h]);
+                    .range([h, 0]);
+
+                xScale = d3.scale.linear()
+                    .domain(d3.extent(dataset, function(d) { return d.Time; }))
+                    .range([0, w]);
+
+            }
+
+            function generateLine(){
+
+                // Define the line
+                var valueline = d3.svg.line()
+                    .x(function(d) { return xScale(d.Time); })
+                    .y(function(d) { return yScale(d.Temperature); });
+
+                var svg = d3.select("body")
+                    .append("svg")
+                    .attr("width",w)
+                    .attr("height",h);
+
+                svg.append("path")
+                    .attr("class", "line")
+                    .attr("d", valueline(dataset));
 
             }
 
