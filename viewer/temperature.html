@@ -31,9 +31,9 @@
 
             var dataset;
 
-            var w = 800;
-            var h = 200;
-            var barPadding = 2;
+            var margin = {top: 20, right: 10, bottom: 20, left: 50};
+            var w = 800 - margin.left - margin.right;
+            var h = 200 - margin.top - margin.bottom;
 
             var yScale, xScale;
             var xAxis, yAxis;
@@ -45,8 +45,10 @@
             // Make the svg element where the graph will appear
             var svg = d3.select("body")
                 .append("svg")
-                .attr("width",w)
-                .attr("height",h);
+                .attr("width",w + margin.left + margin.right)
+                .attr("height",h + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
 
@@ -108,7 +110,7 @@
                   .orient("bottom");
 
                 svg.append("g")
-                    .attr("transform", "translate(0," + (h-25) + ")")
+                    .attr("transform", "translate(0," + h + ")")
                     .call(xAxis);
 
                 yAxis = d3.svg.axis()
@@ -116,7 +118,7 @@
                   .orient("left");
 
                 svg.append("g")
-                    .attr("transform", "translate(" + 50 + ",0)")
+                    .attr("transform", "translate(" + 0 + ",0)")
                     .call(yAxis);
             }
 
@@ -147,5 +149,4 @@
 
         </script>
     </body>
-
 </html>
