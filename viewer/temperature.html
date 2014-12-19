@@ -8,18 +8,27 @@
 
         <style type="text/css">
 
-            div.bar {
-                display: inline-block;
-                width: 20px;
-                height: 75px;   /* We'll override height later */
-                background-color: teal;
-                margin-right: 2px;
-            }
-
             path { 
                 stroke: teal;
                 stroke-width: 2;
                 fill: none;
+            }
+
+            .axis path,
+            .axis line {
+                fill: none;
+                stroke: black;
+                shape-rendering: crispEdges;
+            }
+
+            .axis text {
+                font-family: sans-serif;
+                font-size: 11px;
+            }
+
+            .axisLabel {
+                font: Garamond;
+                font-size: 14px;
             }
 
         </style>
@@ -31,7 +40,7 @@
 
             var dataset;
 
-            var margin = {top: 20, right: 10, bottom: 20, left: 50};
+            var margin = {top: 20, right: 20, bottom: 60, left: 60};
             var w = 800 - margin.left - margin.right;
             var h = 200 - margin.top - margin.bottom;
 
@@ -63,7 +72,6 @@
                             d.Time = new Date(d.Time);
                         });
 
-
                         dataset = data;
                         setCurrentTemp();
                         generateScales();
@@ -83,11 +91,13 @@
                 yScale = d3.scale.linear()
                     .domain([d3.min(dataset, function(d) { return d.Temperature; }) - 1,
                                 d3.max(dataset, function(d) { return d.Temperature; })])
-                    .range([h, 0]);
+                    .range([h, 0])
+                    .nice();
 
                 xScale = d3.time.scale()
                     .domain(d3.extent(dataset, function(d) { return d.Time; }))
-                    .range([0, w]);
+                    .range([0, w])
+                    .nice();
 
             }
 
@@ -111,6 +121,7 @@
 
                 svg.append("g")
                     .attr("transform", "translate(0," + h + ")")
+                    .attr("class", "axis")
                     .call(xAxis);
 
                 yAxis = d3.svg.axis()
@@ -119,7 +130,26 @@
 
                 svg.append("g")
                     .attr("transform", "translate(" + 0 + ",0)")
+                    .attr("class", "axis")
                     .call(yAxis);
+
+                // Add axis labels
+                svg.append("text")
+                    .attr("class", "axisLabel")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 0 - margin.left)
+                    .attr("x", 0 - h/2 )
+                    .attr("dy", "1em")
+                    .style("text-anchor", "middle")
+                    .text("Temperature (C)");
+
+                svg.append("text")
+                    .attr("class", "axisLabel")
+                    .attr("x", w/2 )
+                    .attr("y",h + margin.bottom )
+                    .attr("dy", "-1em")
+                    .style("text-anchor", "middle")
+                    .text("Time");
             }
 
             function generateBars(){
