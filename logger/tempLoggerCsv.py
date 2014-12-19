@@ -16,16 +16,16 @@ import datetime
 import csv
 from ftplib import FTP
 
-# import Adafruit_DHT
+import Adafruit_DHT
 
 ################ Program constants ################
 
 # Sensor details
-# DHT_TYPE = Adafruit_DHT.DHT22
+DHT_TYPE = Adafruit_DHT.DHT22
 DHT_PIN  = 4
 
 # How long to wait (in seconds) between measurements.
-FREQUENCY_SECONDS      = 3
+FREQUENCY_SECONDS      = 60
 
 # How many times to retry any reading
 READING_RETRIES = 5
@@ -35,7 +35,7 @@ SETTINGS_FILENAME = 'config.csv'
 DATA_FILENAME = 'data.csv'
 
 # How much data to store (hours)
-HISTORY_LENGTH = 0.02
+HISTORY_LENGTH = 24
 
 ###################################################
 
@@ -47,6 +47,7 @@ humiData = []
 # Read in the existing data if it is there
 dataFile = open(DATA_FILENAME,'rb')
 dataReader = csv.reader(dataFile)
+next(dataReader)
 for row in dataReader:
 	# load time
 	loadTime = datetime.datetime.strptime(
@@ -87,9 +88,9 @@ while True:
 	success = False
 	while (retries < READING_RETRIES) and not success:
 
-		# humi, temp = Adafruit_DHT.read(DHT_TYPE, DHT_PIN)
-		humi = 10
-		temp = 01
+		humi, temp = Adafruit_DHT.read(DHT_TYPE, DHT_PIN)
+		#humi = 10
+		#temp = 01
 		timeNow = datetime.datetime.now()
 
 		if temp is None:
@@ -131,6 +132,8 @@ while True:
 	# Update the csv file
 	dataFile = open(DATA_FILENAME,'wb')
 	dataWriter = csv.writer(dataFile)
+	# Write the headers
+	dataWriter.writerow(('Time','Temperature','Humidity'))
 	for idx, data in enumerate(timeData):
 		dataWriter.writerow((timeData[idx],tempData[idx],humiData[idx]))
 	dataFile.close()
