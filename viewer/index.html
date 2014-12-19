@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Page Template</title>
+        <script type="text/javascript" src="d3/d3.js"></script>
+
+        <style type="text/css">
+
+            div.bar {
+                display: inline-block;
+                width: 20px;
+                height: 75px;   /* We'll override height later */
+                background-color: teal;
+                margin-right: 2px;
+            }
+
+            path { 
+                stroke: steelblue;
+                stroke-width: 2;
+                fill: none;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+        <script type="text/javascript">
+
+            var dataset;
+
+            var w = 800;
+            var h = 200;
+            var barPadding = 2;
+
+            var yScale;
+
+            // Doesn't work?
+            //var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S.%L000").parse;
+
+
+            d3.csv("data.csv", 
+                function(error, data) {
+                    if (error){
+                        // Log the error
+                        console.log(error);
+                    } else {
+
+                        data.forEach(function(d) {
+                            d.Time = new Date(d.Time);
+                        });
+
+
+                        dataset = data;
+                        console.log(dataset);
+                        generateScales();
+                        generateLine();
+
+                    }
+                }
+            );
+
+            function generateScales(){
+
+                yScale = d3.scale.linear()
+                    .domain([d3.min(dataset, function(d) { return d.Temperature; }) - 1,
+                                d3.max(dataset, function(d) { return d.Temperature; })])
+                    .range([h, 0]);
+
+                xScale = d3.scale.linear()
+                    .domain(d3.extent(dataset, function(d) { return d.Time; }))
+                    .range([0, w]);
+
+            }
+
+            function generateLine(){
+
+                // Define the line
+                var valueline = d3.svg.line()
+                    .x(function(d) { return xScale(d.Time); })
+                    .y(function(d) { return yScale(d.Temperature); });
+
+                var svg = d3.select("body")
+                    .append("svg")
+                    .attr("width",w)
+                    .attr("height",h);
+
+                svg.append("path")
+                    .attr("class", "line")
+                    .attr("d", valueline(dataset));
+
+            }
+
+            function generateBars(){
+
+                var svg = d3.select("body")
+                    .append("svg")
+                    .attr("width",w)
+                    .attr("height",h);
+
+                svg.selectAll("rect")
+                    .data(dataset)
+                    .enter()
+                    .append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("height",h)
+                    .attr("width",w / dataset.length - barPadding)
+                    .attr("fill", "teal")
+                    .attr("y", function(d){
+                        return h - yScale(d.Temperature);
+                    })
+                    .attr("height", function(d,i){
+                        console.log(d.Temperature);
+                        return yScale(d.Temperature);
+                    })
+                    .attr("x", function(d,i) {
+                        return i*(w/dataset.length);
+                    })
+                    ;
+
+            };
+
+        </script>
+    </body>
+
+</html>
