@@ -35,7 +35,8 @@
             var h = 200;
             var barPadding = 2;
 
-            var yScale;
+            var yScale, xScale;
+            var xAxis, yAxis;
 
             // Make the current temperature block
             var currentTemp = d3.select("body")
@@ -65,6 +66,7 @@
                         setCurrentTemp();
                         generateScales();
                         generateLine();
+                        generateAxes();
 
                     }
                 }
@@ -81,7 +83,7 @@
                                 d3.max(dataset, function(d) { return d.Temperature; })])
                     .range([h, 0]);
 
-                xScale = d3.scale.linear()
+                xScale = d3.time.scale()
                     .domain(d3.extent(dataset, function(d) { return d.Time; }))
                     .range([0, w]);
 
@@ -98,6 +100,24 @@
                     .attr("class", "line")
                     .attr("d", valueline(dataset));
 
+            }
+
+            function generateAxes(){
+                xAxis = d3.svg.axis()
+                  .scale(xScale)
+                  .orient("bottom");
+
+                svg.append("g")
+                    .attr("transform", "translate(0," + (h-25) + ")")
+                    .call(xAxis);
+
+                yAxis = d3.svg.axis()
+                  .scale(yScale)
+                  .orient("left");
+
+                svg.append("g")
+                    .attr("transform", "translate(" + 50 + ",0)")
+                    .call(yAxis);
             }
 
             function generateBars(){
