@@ -42,7 +42,7 @@
 
             var margin = {top: 20, right: 20, bottom: 60, left: 60};
             var w = 800 - margin.left - margin.right;
-            var h = 200 - margin.top - margin.bottom;
+            var h = 400 - margin.top - margin.bottom;
 
             var yScale, xScale;
             var xAxis, yAxis;
@@ -76,6 +76,7 @@
                         setCurrentTemp();
                         generateScales();
                         generateLine();
+                        generateCirlces();
                         generateAxes();
 
                     }
@@ -90,7 +91,7 @@
 
                 yScale = d3.scale.linear()
                     .domain([d3.min(dataset, function(d) { return d.Temperature; }) - 1,
-                                d3.max(dataset, function(d) { return d.Temperature; })])
+                                d3.max(dataset, function(d) { return d.Temperature; }) + 1])
                     .range([h, 0])
                     .nice();
 
@@ -112,6 +113,25 @@
                     .attr("class", "line")
                     .attr("d", valueline(dataset));
 
+            }
+
+            function generateCirlces(){
+
+                var markers = svg.append("g");
+
+                markers.selectAll("cirlce")
+                    .data(dataset)
+                    .enter()
+                    .append("circle")
+                    .attr("r",2)
+                    .attr("stroke","teal")
+                    .attr("fill","white")
+                    .attr("cx",function(d){
+                        return xScale(d.Time);
+                    })
+                    .attr("cy",function(d){
+                        return yScale(d.Temperature);
+                    })
             }
 
             function generateAxes(){
