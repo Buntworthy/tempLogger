@@ -4,9 +4,14 @@
 #
 # Temperature logging to csv file on RPi
 #
-# Currently just log the previous 7 days of
-# measurements to a csv file, any older
-# measurements are just discareded.
+# Logs the temperature, humidity and time of the
+# measurement into 3 csv log files:
+# data24h.csv 
+#		- 1 measurement per min for 24 hours
+# data7d
+# 		- 1 measurement per 10 mins for 7 days
+# data30d
+#		- Min/max per day for 30 days
 #
 ##################################################
 
@@ -18,101 +23,43 @@ from ftplib import FTP
 
 import Adafruit_DHT
 
-################ Program constants ################
+################### Fucntions ###################
 
-# Sensor details
-DHT_TYPE = Adafruit_DHT.DHT22
-DHT_PIN  = 4
+def readData(filename):
 
-# How long to wait (in seconds) between measurements.
-FREQUENCY_SECONDS      = 60
+	# Create measurement variables
+	timeData = []
+	tempData = []
+	humiData = []
 
-# How many times to retry any reading
-READING_RETRIES = 5
+	# Read in the existing data if it is there
+	dataFile = open(filename,'rb')
+	dataReader = csv.reader(dataFile)
+	next(dataReader) # skip the first row
+	for row in dataReader:
+		# load time
+		loadTime = datetime.datetime.strptime(
+			row[0],
+			'%Y-%m-%d %H:%M:%S.%f')
 
-# Filenames
-SETTINGS_FILENAME = 'config.csv'
-DATA_FILENAME = 'data.csv'
+		timeData.append(loadTime)
+		tempData.append(row[1])
+		humiData.append(row[2])
 
-# How much data to store (hours)
-HISTORY_LENGTH = 24
+	dataFile.close()
 
-###################################################
+	return (timeData, tempData, humiData)
 
-# Create measurement variables
-timeData = []
-tempData = []
-humiData = []
+def storeResults((timeNow, temp, humi),(timeData,tempData,humiData)):
 
-# Read in the existing data if it is there
-dataFile = open(DATA_FILENAME,'rb')
-dataReader = csv.reader(dataFile)
-next(dataReader)
-for row in dataReader:
-	# load time
-	loadTime = datetime.datetime.strptime(
-		row[0],
-		'%Y-%m-%d %H:%M:%S.%f')
+	# Store the results
+	timeData.append(timeNow)
+	tempData.append(temp)
+	humiData.append(humi)
 
-	timeData.append(loadTime)
-	tempData.append(row[1])
-	humiData.append(row[2])
+	return (timeData,tempData,humiData)
 
-dataFile.close()
-
-# Load the FTP access details
-configFile = open(SETTINGS_FILENAME,'rb')
-configReader = csv.reader(configFile)
-config = {rows[0]:rows[1] for rows in configReader}
-host = config['host']
-user = config['user']
-pword = config['pword']
-
-# Set up FTP access object
-ftp = FTP(host)
-try:
-	print('Logging into ftp server ' + host)
-	ftp.login(user, pword)
-
-except Exception, e:
-	print('Failed to log into FTP server')
-	raise e
-
-print 'Logging sensor measurements every {0} seconds.'.format(FREQUENCY_SECONDS)
-print 'Press Ctrl-C to quit.'
-
-while True:
-	
-	# Attempt to get sensor reading.
-	retries = 0;
-	success = False
-	while (retries < READING_RETRIES) and not success:
-
-		humi, temp = Adafruit_DHT.read(DHT_TYPE, DHT_PIN)
-		#humi = 10
-		#temp = 01
-		timeNow = datetime.datetime.now()
-
-		if temp is None:
-			retries += 1
-			time.sleep(2)
-		else:
-			success = True
-
-	# Print the current reading
-	if success:
-		print (timeNow)
-		print 'Temperature: {0:0.1f} C'.format(temp)
-		print 'Humidity:    {0:0.1f} %'.format(humi)
-
-		# Store the results
-		timeData.append(timeNow)
-		tempData.append(temp)
-		humiData.append(humi)
-
-	else:
-		print (timeNow)
-		print 'Temperature reading failed'
+def removeOldResults((timeData, tempData, humiData), HISTORY_LENGTH, timeNow):
 
 	# Remove any out dated results
 	delIdxs = []
@@ -129,6 +76,10 @@ while True:
 		del(tempData[0:maxIdx])
 		del(humiData[0:maxIdx])
 
+	return (timeData, tempData, humiData)
+
+def updateCsv((timeData, tempData, humiData), DATA_FILENAME):
+
 	# Update the csv file
 	dataFile = open(DATA_FILENAME,'wb')
 	dataWriter = csv.writer(dataFile)
@@ -138,14 +89,147 @@ while True:
 		dataWriter.writerow((timeData[idx],tempData[idx],humiData[idx]))
 	dataFile.close()
 
-	dataFile = open(DATA_FILENAME,'r')
+
+def uploadFtp((timeData, tempData, humiData), DATA_FILENAME, ftp):
+
 	# Upload via ftp
-	ftp.storbinary('STOR /cutsquash.com/data.csv', dataFile);
+	dataFile = open(DATA_FILENAME,'r')
+	try:
+		ftp.storbinary('STOR /cutsquash.com/' + DATA_FILENAME, dataFile);
+		print('Uploaded to ftp')
+
+	except Exception, e:
+		print('Could not upload the file to ftp')
+		raise e
+		time.sleep()
+		# Add reconnect to ftp
 
 	# Done with the data file
 	dataFile.close()
 
-	# If there were problems try and fix them
- 	
+################ Program constants ################
+
+# Sensor details
+DHT_TYPE = Adafruit_DHT.DHT22
+DHT_PIN  = 4
+
+# Sampling frequency.
+FREQUENCY_SECONDS = 5
+SAMPLING_24 = 60
+SAMPLING_7 = 10*60
+
+# How many times to retry any reading
+READING_RETRIES = 5
+
+# Filenames
+SETTINGS_FILENAME = 'config.csv'
+DATA_FILENAME_24  = 'data24.csv'
+DATA_FILENAME_7   = 'data7.csv'
+
+# How much data to store (hours)
+HISTORY_LENGTH_24 = 24
+HISTORY_LENGTH_7  = 7*24
+
+###################################################
+
+prevReadingTime24 = datetime.datetime.now()
+prevReadingTime7 = datetime.datetime.now()
+
+(timeData24, tempData24, humiData24) = readData(DATA_FILENAME_24)
+(timeData7, tempData7, humiData7) = readData(DATA_FILENAME_7)
+
+# Load the FTP access details
+configFile = open(SETTINGS_FILENAME,'rb')
+configReader = csv.reader(configFile)
+config = {rows[0]:rows[1] for rows in configReader}
+host = config['host']
+user = config['user']
+pword = config['pword']
+
+# Set up FTP access object
+ftp = FTP(host, timeout = 30)
+try:
+	print('Logging into ftp server ' + host)
+	ftp.login(user, pword)
+
+except Exception, e:
+	print('Failed to log into FTP server')
+	raise e
+
+print 'Logging sensor measurements every {0} seconds.'.format(FREQUENCY_SECONDS)
+print 'Press Ctrl-C to quit.'
+
+while True:
+
+	# Check the time to see if we need a new reading
+	timeCheck = datetime.datetime.now()
+	update24 = False
+	update7 = False
+
+	print((timeCheck - prevReadingTime24).total_seconds())
+
+	if (timeCheck - prevReadingTime24).total_seconds() > SAMPLING_24:
+		update24 = True
+		prevReadingTime24 = timeCheck
+		print('Updating 24 hour data')
+
+	if (timeCheck - prevReadingTime7).total_seconds() > SAMPLING_7:
+		update7 = True
+		prevReadingTime7 = timeCheck
+		print('Updating 7 day data')
+
+	if update24 or update7:
+		
+		# Attempt to get sensor reading.
+		retries = 0;
+		success = False
+		while (retries < READING_RETRIES) and not success:
+
+			humi, temp = Adafruit_DHT.read(DHT_TYPE, DHT_PIN)
+			timeNow = datetime.datetime.now()
+
+			if temp is None:
+				retries += 1
+				time.sleep(2)
+			else:
+				success = True
+
+		# Print the current reading
+		if success:
+			print (timeNow)
+			print 'Temperature: {0:0.1f} C'.format(temp)
+			print 'Humidity:    {0:0.1f} %'.format(humi)
+
+
+			if update24:
+				# Add new results
+				(timeData24, tempData24, humiData24) = storeResults((timeNow, temp, humi),
+														(timeData24, tempData24, humiData24))
+				# Remove old results
+				removeOldResults((timeData24, tempData24, humiData24), HISTORY_LENGTH_24, timeNow)
+
+				# Update csv file
+				updateCsv((timeData24, tempData24, humiData24), DATA_FILENAME_24)
+
+				# Upload via ftp
+				uploadFtp((timeData24, tempData24, humiData24), DATA_FILENAME_24, ftp)
+
+			if update7:
+				# Add new results
+				(timeData7, tempData7, humiData7) = storeResults((timeNow, temp, humi),
+														(timeData7, tempData7, humiData7))
+				# Remove old results
+				removeOldResults((timeData7, tempData7, humiData7), HISTORY_LENGTH_7, timeNow)
+
+				# Update csv file
+				updateCsv((timeData7, tempData7, humiData7), DATA_FILENAME_7)
+
+				# Upload via ftp
+				uploadFtp((timeData7, tempData7, humiData7), DATA_FILENAME_7, ftp)
+
+		else:
+			print (timeNow)
+			print 'Temperature reading failed'
+
 	# Wait until the next reading
 	time.sleep(FREQUENCY_SECONDS)
