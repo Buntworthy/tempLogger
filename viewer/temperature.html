@@ -3,7 +3,7 @@
 
     <head>
         <meta charset="utf-8">
-        <title>D3 Page Template</title>
+        <title>Temperature charts</title>
         <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 
         <style type="text/css">
@@ -12,6 +12,11 @@
                 stroke: teal;
                 stroke-width: 2;
                 fill: none;
+            }
+
+            svg {
+                display: block;
+                margin: auto;
             }
 
             .axis path,
@@ -23,12 +28,21 @@
 
             .axis text {
                 font-family: sans-serif;
-                font-size: 11px;
+                font-size: 12px;
             }
 
             .axisLabel {
                 font: Garamond;
-                font-size: 14px;
+                font-size: 15px;
+            }
+
+            #currentTemp {
+                font: Garamond;
+                font-size: 20px;
+                margin: auto;
+                text-align: center;
+                padding: 20px;
+                width: 500px;
             }
 
         </style>
@@ -49,7 +63,8 @@
 
             // Make the current temperature block
             var currentTemp = d3.select("body")
-                .append("p")
+                .append("div")
+                .attr("id","currentTemp")
 
             // Make the svg element where the graph will appear
             var svg = d3.select("body")
@@ -61,7 +76,7 @@
 
 
 
-            d3.csv("data.csv", 
+            d3.csv("data24.csv", 
                 function(error, data) {
                     if (error){
                         // Log the error
@@ -76,7 +91,7 @@
                         setCurrentTemp();
                         generateScales();
                         generateLine();
-                        generateCirlces();
+                        //generateCirlces();
                         generateAxes();
 
                     }
@@ -84,7 +99,10 @@
             );
 
             function setCurrentTemp(){
-                currentTemp.text("Temperature is: " + dataset[dataset.length - 1].Temperature);
+                var tempFormat = d3.format(".1f");
+                currentTemp.text("Current temperature is: " 
+                    + tempFormat(dataset[dataset.length - 1].Temperature)
+                    + "C");
             }
 
             function generateScales(){
@@ -97,8 +115,7 @@
 
                 xScale = d3.time.scale()
                     .domain(d3.extent(dataset, function(d) { return d.Time; }))
-                    .range([0, w])
-                    .nice();
+                    .range([0, w]);
 
             }
 
