@@ -72,7 +72,7 @@
             var yScale, xScale;
             var xAxis, yAxis;
 
-            var CHANGE_THRESH = 0.5; // Degrees per hour
+            var CHANGE_THRESH = 0.25; // Degrees per hour
 
             // Make the current temperature block
             var currentTemp = d3.select("body")
@@ -123,7 +123,7 @@
                 // Use only the last 30 readings
                 var past = mean(temps.slice(-30,-15))
                 var now = mean(temps.slice(-15))
-                if (Math.abs(now - past) > CHANGE_THRESH*2){
+                if (Math.abs(now - past) > CHANGE_THRESH/2){
                     if (now-past > 0) {
                         currentTemp.append("p")
                         .text(" and getting warmer.")
