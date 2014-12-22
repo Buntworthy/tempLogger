@@ -52,6 +52,17 @@
     <body>
         <script type="text/javascript">
 
+        // Define mean function
+        function mean(array)
+            {
+             var sum = 0, i;
+             for (i = 0; i < array.length; i++)
+             {
+              sum += array[i];
+             }
+              return array.length ? sum / array.length : 0;
+            }
+
             var dataset;
 
             var margin = {top: 20, right: 20, bottom: 60, left: 60};
@@ -60,6 +71,8 @@
 
             var yScale, xScale;
             var xAxis, yAxis;
+
+            var CHANGE_THRESH = 0.5; // Degrees per hour
 
             // Make the current temperature block
             var currentTemp = d3.select("body")
@@ -103,6 +116,25 @@
                 currentTemp.text("Current temperature is: " 
                     + tempFormat(dataset[dataset.length - 1].Temperature)
                     + "C");
+
+                // Describe the trend
+                var temps = dataset.map(function(d) {return Number(d.Temperature);});
+
+                // Use only the last 30 readings
+                var past = mean(temps.slice(-30,-15))
+                var now = mean(temps.slice(-15))
+                if (Math.abs(now - past) > CHANGE_THRESH*2){
+                    if (now-past > 0) {
+                        currentTemp.append("p")
+                        .text(" and getting warmer.")
+                    } else {
+                        currentTemp.append("p")
+                        .text(" and getting cooler.")
+                    }
+                } else {
+                    currentTemp.append("p")
+                        .text(" and staying about the same.")
+                }
             }
 
             function generateScales(){
