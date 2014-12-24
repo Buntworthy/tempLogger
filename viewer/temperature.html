@@ -101,6 +101,7 @@
                         });
 
                         dataset = data;
+                        averageTemps();
                         setCurrentTemp();
                         generateScales();
                         generateLine();
@@ -110,6 +111,24 @@
                     }
                 }
             );
+
+            function averageTemps(){
+                var aveSize = 2;
+                var temps = dataset.map(function(d) {return Number(d.Temperature);});
+
+                var aveData = temps.map(function(d, i){
+                    var selectTemps = temps.slice(i-aveSize, i+aveSize+1);
+                    var result = d3.sum(selectTemps)/selectTemps.length;
+                    if (isNaN(result)){
+                        result = d;
+                    }
+                    return result
+                });
+
+                dataset.forEach(function(d,i){
+                    d.Temperature = aveData[i];
+                })
+            }
 
             function setCurrentTemp(){
                 var tempFormat = d3.format(".1f");
