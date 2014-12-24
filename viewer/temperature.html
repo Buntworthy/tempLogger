@@ -5,90 +5,62 @@
         <meta charset="utf-8">
         <title>Temperature charts</title>
         <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-
-        <style type="text/css">
-
-            path { 
-                stroke: teal;
-                stroke-width: 2;
-                fill: none;
-            }
-
-            svg {
-                display: block;
-                margin: auto;
-            }
-
-            .axis path,
-            .axis line {
-                fill: none;
-                stroke: black;
-                shape-rendering: crispEdges;
-            }
-
-            .axis text {
-                font-family: sans-serif;
-                font-size: 12px;
-            }
-
-            .axisLabel {
-                font: Garamond;
-                font-size: 15px;
-            }
-
-            #currentTemp {
-                font: Garamond;
-                font-size: 20px;
-                margin: auto;
-                text-align: center;
-                padding: 20px;
-                width: 500px;
-            }
-
-        </style>
-
+        <link rel="stylesheet" type="text/css" href="tempCharts.css">
     </head>
 
     <body>
         <script type="text/javascript">
 
-        // Define mean function
-        function mean(array)
-            {
-             var sum = 0, i;
-             for (i = 0; i < array.length; i++)
-             {
-              sum += array[i];
-             }
-              return array.length ? sum / array.length : 0;
+            //////////////// Utility functions ////////////////////////
+
+            // Define mean function
+            function mean(array){
+                var sum = 0, i;
+                for (i = 0; i < array.length; i++)
+                {
+                    sum += array[i];
+                }
+                return array.length ? sum / array.length : 0;
             }
 
-            var dataset;
+            /////////////////// Define constants //////////////////////
 
+            var CHANGE_THRESH = 0.25; // Degrees per hour
+
+            /////////////////// Define variables //////////////////////
+
+            // Dimensions
             var margin = {top: 20, right: 20, bottom: 60, left: 60};
             var w = 800 - margin.left - margin.right;
             var h = 400 - margin.top - margin.bottom;
 
-            var yScale, xScale;
+            // Variables
             var xAxis, yAxis;
 
-            var CHANGE_THRESH = 0.25; // Degrees per hour
-
-            // Make the current temperature block
+            // Make the current temperature display
             var currentTemp = d3.select("body")
                 .append("div")
                 .attr("id","currentTemp")
 
-            // Make the svg element where the graph will appear
-            var svg = d3.select("body")
+            // Make the 24 hour graph element
+            var graph24 = d3.select("body")
                 .append("svg")
                 .attr("width",w + margin.left + margin.right)
                 .attr("height",h + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+            // Make the 7 day graph element
+            var graph7 = d3.select("body")
+                .append("svg")
+                .attr("width",w + margin.left + margin.right)
+                .attr("height",h + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+            ////////////////////// Load data /////////////////////////
 
+            // Load 24 hour data and make plots
             d3.csv("data24.csv", 
                 function(error, data) {
                     if (error){
@@ -100,19 +72,19 @@
                             d.Time = new Date(d.Time);
                         });
 
-                        dataset = data;
-                        averageTemps();
-                        setCurrentTemp();
-                        generateScales();
-                        generateLine();
+                        dataset24 = averageTemps(data);
+                        setCurrentTemp(dataset24);
+                        xScale24 = generateXScale(dataset24);
+                        yScale24 = generateYScale(dataset24);
+                        generateLine(graph24, dataset24, xScale24, yScale24);
                         //generateCirlces();
-                        generateAxes();
+                        generateAxes(graph24, xScale24, yScale24);
 
                     }
                 }
             );
 
-            function averageTemps(){
+            function averageTemps(dataset){
                 var aveSize = 2;
                 var temps = dataset.map(function(d) {return Number(d.Temperature);});
 
@@ -128,9 +100,11 @@
                 dataset.forEach(function(d,i){
                     d.Temperature = aveData[i];
                 })
+
+                return dataset
             }
 
-            function setCurrentTemp(){
+            function setCurrentTemp(dataset){
                 var tempFormat = d3.format(".1f");
                 currentTemp.text("Current temperature is: " 
                     + tempFormat(dataset[dataset.length - 1].Temperature)
@@ -156,28 +130,33 @@
                 }
             }
 
-            function generateScales(){
-
-                yScale = d3.scale.linear()
-                    .domain([d3.min(dataset, function(d) { return d.Temperature; }) - 1,
-                                d3.max(dataset, function(d) { return d.Temperature; }) + 1])
-                    .range([h, 0])
-                    .nice();
-
-                xScale = d3.time.scale()
+            function generateXScale(dataset){
+                var xScale = d3.time.scale()
                     .domain(d3.extent(dataset, function(d) { return d.Time; }))
                     .range([0, w]);
 
+                return xScale
             }
 
-            function generateLine(){
+            function generateYScale(dataset){
+
+                var yScale = d3.scale.linear()
+                    .domain([d3.min(dataset, function(d) { return d.Temperature; }) - 0.5,
+                                d3.max(dataset, function(d) { return d.Temperature; }) + 0.5])
+                    .range([h, 0])
+                    .nice();
+
+                return yScale;
+            }
+
+            function generateLine(thisGraph, dataset, xScale, yScale){
 
                 // Define the line
                 var valueline = d3.svg.line()
                     .x(function(d) { return xScale(d.Time); })
                     .y(function(d) { return yScale(d.Temperature); });
 
-                svg.append("path")
+                thisGraph.append("path")
                     .attr("class", "line")
                     .attr("d", valueline(dataset));
 
@@ -185,7 +164,7 @@
 
             function generateCirlces(){
 
-                var markers = svg.append("g");
+                var markers = sgraph24vg.append("g");
 
                 markers.selectAll("cirlce")
                     .data(dataset)
@@ -202,12 +181,13 @@
                     })
             }
 
-            function generateAxes(){
+            function generateAxes(thisGraph, xScale, yScale){
+
                 xAxis = d3.svg.axis()
                   .scale(xScale)
                   .orient("bottom");
 
-                svg.append("g")
+                thisGraph.append("g")
                     .attr("transform", "translate(0," + h + ")")
                     .attr("class", "axis")
                     .call(xAxis);
@@ -216,13 +196,13 @@
                   .scale(yScale)
                   .orient("left");
 
-                svg.append("g")
+                thisGraph.append("g")
                     .attr("transform", "translate(" + 0 + ",0)")
                     .attr("class", "axis")
                     .call(yAxis);
 
                 // Add axis labels
-                svg.append("text")
+                thisGraph.append("text")
                     .attr("class", "axisLabel")
                     .attr("transform", "rotate(-90)")
                     .attr("y", 0 - margin.left)
@@ -231,7 +211,7 @@
                     .style("text-anchor", "middle")
                     .text("Temperature (C)");
 
-                svg.append("text")
+                thisGraph.append("text")
                     .attr("class", "axisLabel")
                     .attr("x", w/2 )
                     .attr("y",h + margin.bottom )
@@ -240,30 +220,6 @@
                     .text("Time");
             }
 
-            function generateBars(){
-
-                svg.selectAll("rect")
-                    .data(dataset)
-                    .enter()
-                    .append("rect")
-                    .attr("x",0)
-                    .attr("y",0)
-                    .attr("height",h)
-                    .attr("width",w / dataset.length - barPadding)
-                    .attr("fill", "teal")
-                    .attr("y", function(d){
-                        return h - yScale(d.Temperature);
-                    })
-                    .attr("height", function(d,i){
-                        console.log(d.Temperature);
-                        return yScale(d.Temperature);
-                    })
-                    .attr("x", function(d,i) {
-                        return i*(w/dataset.length);
-                    })
-                    ;
-
-            };
 
         </script>
     </body>
