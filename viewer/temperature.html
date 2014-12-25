@@ -72,7 +72,7 @@
                             d.Time = new Date(d.Time);
                         });
 
-                        dataset24 = averageTemps(data);
+                        dataset24 = averageTemps(data, 7);
                         setCurrentTemp(dataset24);
                         xScale24 = generateXScale(dataset24);
                         yScale24 = generateYScale(dataset24);
@@ -84,8 +84,32 @@
                 }
             );
 
-            function averageTemps(dataset){
-                var aveSize = 2;
+            // Load 24 hour data and make plots
+            d3.csv("data7.csv", 
+                function(error, data) {
+                    if (error){
+                        // Log the error
+                        console.log(error);
+                    } else {
+
+                        data.forEach(function(d) {
+                            d.Time = new Date(d.Time);
+                        });
+
+                        dataset7 = averageTemps(data, 1);
+                        setCurrentTemp(dataset7);
+                        xScale7 = generateXScale(dataset7);
+                        yScale7 = generateYScale(dataset7);
+                        generateLine(graph7, dataset7, xScale7, yScale7);
+                        //generateCirlces();
+                        generateAxes(graph7, xScale7, yScale7);
+
+                    }
+                }
+            );
+
+            function averageTemps(dataset, windowSize){
+                var aveSize = (windowSize - 1) / 2;
                 var temps = dataset.map(function(d) {return Number(d.Temperature);});
 
                 var aveData = temps.map(function(d, i){
