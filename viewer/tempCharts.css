@@ -35,3 +35,10 @@ svg {
     padding: 20px;
     width: 500px;
 }
+
+div.tip {
+    width: 30px;
+    height: 20px;
+    background: green;
+    position: absolute;
+}

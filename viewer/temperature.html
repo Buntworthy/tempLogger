@@ -58,6 +58,10 @@
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+            var tooltip = d3.select("body").append("div")   
+                .attr("class", "tip")               
+                .style("opacity", 0);
+
             ////////////////////// Load data /////////////////////////
 
             // Load 24 hour data and make plots
@@ -77,7 +81,7 @@
                         xScale24 = generateXScale(dataset24);
                         yScale24 = generateYScale(dataset24);
                         generateLine(graph24, dataset24, xScale24, yScale24);
-                        //generateCirlces();
+                        generateCirlces(graph24, dataset24, xScale24, yScale24);
                         generateAxes(graph24, xScale24, yScale24);
 
                     }
@@ -186,23 +190,57 @@
 
             }
 
-            function generateCirlces(){
+            function generateCirlces(thisGraph, dataset, xScale, yScale){
 
-                var markers = sgraph24vg.append("g");
+                var markers = thisGraph.append("g");
 
                 markers.selectAll("cirlce")
                     .data(dataset)
                     .enter()
                     .append("circle")
-                    .attr("r",2)
+                    .attr("r",10)
                     .attr("stroke","teal")
-                    .attr("fill","white")
+                    .attr("fill","teal")
+                    .attr("opacity",0.0)
                     .attr("cx",function(d){
                         return xScale(d.Time);
                     })
                     .attr("cy",function(d){
                         return yScale(d.Temperature);
                     })
+                    .on("mouseover", function(d, i) {      
+                        d3.select(this)
+                            .transition()        
+                            .duration(50)      
+                            .style("opacity", 0.9);
+
+                        tooltip
+                            .text(d.Temperature)
+                            //.style("left", (d3.event.pageX) + "px")     
+                            //.style("top", (d3.event.pageY - 228) + "px");
+
+                        tooltip.transition()
+                            .duration(1000)
+                            .style("opacity", 0.9)
+                            .style("left", (d3.event.pageX) + "px")     
+                            .style("top", (d3.event.pageY - 28) + "px");
+
+                        //dataset24[i].Temperature += 0.1; 
+                        //generateLine(thisGraph, dataset, xScale, yScale);
+                    })  
+                    .on("mouseout", function(d) {       
+                        d3.select(this)
+                            .transition()        
+                            .duration(500)      
+                            .style("opacity", 0.0);
+
+                        tooltip.transition()
+                            .duration(1000)
+                            .style("left", (d3.event.pageX) + "px")     
+                            .style("top", (d3.event.pageY - 28) + "px")
+                            .style("opacity", 0.0);
+                        }   
+                    );
             }
 
             function generateAxes(thisGraph, xScale, yScale){
