@@ -47,6 +47,7 @@
                 .append("svg")
                 .attr("width",w + margin.left + margin.right)
                 .attr("height",h + margin.top + margin.bottom)
+                .attr("id", "graph24")
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -57,6 +58,13 @@
                 .attr("height",h + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            d3.select("#graph24").on("mouseleave", function(d) {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0.0);
+                        }   
+                    );
 
             var tooltip = d3.select("body").append("div")   
                 .attr("class", "tip")               
@@ -186,7 +194,8 @@
 
                 thisGraph.append("path")
                     .attr("class", "line")
-                    .attr("d", valueline(dataset));
+                    .attr("d", valueline(dataset))
+                    ;
 
             }
 
@@ -208,39 +217,31 @@
                     .attr("cy",function(d){
                         return yScale(d.Temperature);
                     })
-                    .on("mouseover", function(d, i) {      
-                        d3.select(this)
-                            .transition()        
-                            .duration(50)      
-                            .style("opacity", 0.9);
+                    .on("mouseover", function(d, i) {
+                        // Text format for the tool tip
+                        var tempFormat = d3.format(".1f");
+
+                        // d3.select(this)
+                        //     .transition()        
+                        //     .duration(50)      
+                        //     .style("opacity", 0.9);
 
                         tooltip
-                            .text(d.Temperature)
+                            .text(tempFormat(d.Temperature));
                             //.style("left", (d3.event.pageX) + "px")     
                             //.style("top", (d3.event.pageY - 228) + "px");
 
                         tooltip.transition()
-                            .duration(1000)
-                            .style("opacity", 0.9)
+                            .duration(200)
+                            .ease("linear")
+                            .style("opacity", 1)
                             .style("left", (d3.event.pageX) + "px")     
-                            .style("top", (d3.event.pageY - 28) + "px");
+                            .style("top", (d3.event.pageY - 30) + "px");
 
                         //dataset24[i].Temperature += 0.1; 
                         //generateLine(thisGraph, dataset, xScale, yScale);
-                    })  
-                    .on("mouseout", function(d) {       
-                        d3.select(this)
-                            .transition()        
-                            .duration(500)      
-                            .style("opacity", 0.0);
-
-                        tooltip.transition()
-                            .duration(1000)
-                            .style("left", (d3.event.pageX) + "px")     
-                            .style("top", (d3.event.pageY - 28) + "px")
-                            .style("opacity", 0.0);
-                        }   
-                    );
+                    });  
+                    
             }
 
             function generateAxes(thisGraph, xScale, yScale){
