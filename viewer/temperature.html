@@ -59,6 +59,14 @@
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+            // Make the Min Max graph element
+            var graphMinMax = d3.select("body")
+                .append("svg")
+                .attr("width",w + margin.left + margin.right)
+                .attr("height",h + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
             d3.select("#graph24").on("mouseleave", function(d) {
                         tooltip.transition()
                             .duration(500)
@@ -109,16 +117,32 @@
                         });
 
                         dataset7 = averageTemps(data, 1);
-                        setCurrentTemp(dataset7);
                         xScale7 = generateXScale(dataset7);
                         yScale7 = generateYScale(dataset7);
                         generateLine(graph7, dataset7, xScale7, yScale7);
-                        //generateCirlces();
                         generateAxes(graph7, xScale7, yScale7);
 
                     }
                 }
             );
+
+            // Load the min max data
+            d3.csv("dataMinMax.csv",
+                function(error, data) {
+                    if (error){
+                        // Log the error
+                        console.log(error);
+                    } else {
+                        // Do something with the data
+                        data.forEach(function(d) {
+                            d.Time = new Date(d.Time);
+                        });
+                        datasetMinMax = data;
+                    }
+                }
+            );
+
+            //////////////////////// Plotting functions /////////////////
 
             function averageTemps(dataset, windowSize){
                 var aveSize = (windowSize - 1) / 2;
