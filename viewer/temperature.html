@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
         <title>Temperature charts</title>
-        <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        <script src="d3/d3.min.js" charset="utf-8"></script>
         <link rel="stylesheet" type="text/css" href="tempCharts.css">
     </head>
 
@@ -138,6 +138,70 @@
                             d.Time = new Date(d.Time);
                         });
                         datasetMinMax = data;
+
+                        var bars = graphMinMax.append("g")
+                                        .attr("id","minmax");
+
+                        var barXScale = d3.scale.ordinal()
+                            .domain(d3.range(datasetMinMax.length))
+                            .rangeRoundBands([0, w], 0.05);
+
+                        var barYScale = d3.scale.linear()
+                            .domain([d3.min(datasetMinMax, function(d) { return Number(d.Min); }) - 0.5,
+                                        d3.max(datasetMinMax, function(d) { return Number(d.Max); }) + 0.5])
+                            .range([h, 0])  
+                            .nice();
+
+                        bars.selectAll("rect")
+                            .data(datasetMinMax)
+                            .enter()
+                            .append("rect")
+                            .attr("x",function(d,i){
+                                return barXScale(i);
+                            })
+                            .attr("y",function(d){
+                                return barYScale(d.Max);
+                            })
+                            .attr("width",9)
+                            .attr("height",function(d){
+                                return - barYScale(d.Max) + barYScale(d.Min);
+                            });
+
+                             xAxis = d3.svg.axis()
+                              .scale(barXScale)
+                              .orient("bottom");
+
+                            bars.append("g")
+                                .attr("transform", "translate(0," + h + ")")
+                                .attr("class", "axis")
+                                .call(xAxis);
+
+                            yAxis = d3.svg.axis()
+                              .scale(barYScale)
+                              .orient("left");
+
+                            bars.append("g")
+                                .attr("transform", "translate(" + 0 + ",0)")
+                                .attr("class", "axis")
+                                .call(yAxis);
+
+                            // Add axis labels
+                            bars.append("text")
+                                .attr("class", "axisLabel")
+                                .attr("transform", "rotate(-90)")
+                                .attr("y", 0 - margin.left)
+                                .attr("x", 0 - h/2 )
+                                .attr("dy", "1em")
+                                .style("text-anchor", "middle")
+                                .text("Temperature (C)");
+
+                            bars.append("text")
+                                .attr("class", "axisLabel")
+                                .attr("x", w/2 )
+                                .attr("y",h + margin.bottom )
+                                .attr("dy", "-1em")
+                                .style("text-anchor", "middle")
+                                .text("Time");
                     }
                 }
             );

@@ -17,6 +17,16 @@ svg {
     shape-rendering: crispEdges;
 }
 
+#minmax rect {
+    stroke:teal;
+    fill:teal;
+}
+
+#minmax rect:hover {
+    stroke:teal;
+    fill:black;
+}
+
 .axis text {
     font-family: sans-serif;
     font-size: 12px;
