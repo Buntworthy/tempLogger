@@ -152,7 +152,7 @@
                             .range([h, 0])  
                             .nice();
 
-                        bars.selectAll("rect")
+                        var rects = bars.selectAll("rect")
                             .data(datasetMinMax)
                             .enter()
                             .append("rect")
@@ -167,41 +167,76 @@
                                 return - barYScale(d.Max) + barYScale(d.Min);
                             });
 
-                             xAxis = d3.svg.axis()
-                              .scale(barXScale)
-                              .orient("bottom");
+                        graphMinMax.selectAll("text")
+                            .data(datasetMinMax)
+                            .enter()
+                            .append("text")
+                            .attr("class","maxval")
+                            .attr("text-anchor", "middle")
+                            .style("opacity", 0)
+                            .text(function(d){
+                                var tempFormat = d3.format(".1f");
+                                return tempFormat(d.Max);
+                            })
+                            .attr("x",function(d,i){
+                                return barXScale(i);
+                            })
+                            .attr("y",function(d){
+                                return barYScale(d.Max) - 5;
+                            });
 
-                            bars.append("g")
-                                .attr("transform", "translate(0," + h + ")")
-                                .attr("class", "axis")
-                                .call(xAxis);
+                            graphMinMax.selectAll("rect").on("mouseover", function(d,i){
+                                var temp = d3.selectAll("text.maxval");
+                                d3.select(temp[0][i])
+                                    .transition()
+                                    .duration(50)
+                                    .ease("linear")
+                                    .style("opacity", 1);
+                            })
+                            .on("mouseleave", function(d){
+                                d3.selectAll("text.maxval")
+                                    .transition()
+                                    .duration(200)
+                                    .ease("linear")
+                                    .style("opacity", 0);
+                            });
 
-                            yAxis = d3.svg.axis()
-                              .scale(barYScale)
-                              .orient("left");
+                        // Add axes
+                        xAxis = d3.svg.axis()
+                          .scale(barXScale)
+                          .orient("bottom");
 
-                            bars.append("g")
-                                .attr("transform", "translate(" + 0 + ",0)")
-                                .attr("class", "axis")
-                                .call(yAxis);
+                        bars.append("g")
+                            .attr("transform", "translate(0," + h + ")")
+                            .attr("class", "axis")
+                            .call(xAxis);
 
-                            // Add axis labels
-                            bars.append("text")
-                                .attr("class", "axisLabel")
-                                .attr("transform", "rotate(-90)")
-                                .attr("y", 0 - margin.left)
-                                .attr("x", 0 - h/2 )
-                                .attr("dy", "1em")
-                                .style("text-anchor", "middle")
-                                .text("Temperature (C)");
+                        yAxis = d3.svg.axis()
+                          .scale(barYScale)
+                          .orient("left");
 
-                            bars.append("text")
-                                .attr("class", "axisLabel")
-                                .attr("x", w/2 )
-                                .attr("y",h + margin.bottom )
-                                .attr("dy", "-1em")
-                                .style("text-anchor", "middle")
-                                .text("Time");
+                        bars.append("g")
+                            .attr("transform", "translate(" + 0 + ",0)")
+                            .attr("class", "axis")
+                            .call(yAxis);
+
+                        // Add axis labels
+                        bars.append("text")
+                            .attr("class", "axisLabel")
+                            .attr("transform", "rotate(-90)")
+                            .attr("y", 0 - margin.left)
+                            .attr("x", 0 - h/2 )
+                            .attr("dy", "1em")
+                            .style("text-anchor", "middle")
+                            .text("Temperature (C)");
+
+                        bars.append("text")
+                            .attr("class", "axisLabel")
+                            .attr("x", w/2 )
+                            .attr("y",h + margin.bottom )
+                            .attr("dy", "-1em")
+                            .style("text-anchor", "middle")
+                            .text("Time");
                     }
                 }
             );

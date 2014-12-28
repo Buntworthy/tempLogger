@@ -52,3 +52,10 @@ div.tip {
     background: white;
     position: absolute;
 }
+
+div.maxval{
+    width: 30px;
+    height: 20px;
+    background: green;
+    position: absolute;
+}
