@@ -90,7 +90,7 @@ def updateCsv((timeData, tempData, humiData), DATA_FILENAME):
 	dataFile.close()
 
 
-def uploadFtp((timeData, tempData, humiData), DATA_FILENAME, ftp):
+def uploadFtp((timeData, tempData, humiData), DATA_FILENAME, ftp, user, pword):
 
 	# Upload via ftp
 	dataFile = open(DATA_FILENAME,'r')
@@ -100,9 +100,12 @@ def uploadFtp((timeData, tempData, humiData), DATA_FILENAME, ftp):
 
 	except Exception, e:
 		print('Could not upload the file to ftp')
-		raise e
-		time.sleep()
-		# Add reconnect to ftp
+		time.sleep(10)
+		# Reconnect to ftp
+		print('Attempting to reconnect')
+		ftp.connect()
+		ftp.login(user, pword)
+		print('Logged back in')
 
 	# Done with the data file
 	dataFile.close()
@@ -212,7 +215,7 @@ while True:
 				updateCsv((timeData24, tempData24, humiData24), DATA_FILENAME_24)
 
 				# Upload via ftp
-				uploadFtp((timeData24, tempData24, humiData24), DATA_FILENAME_24, ftp)
+				uploadFtp((timeData24, tempData24, humiData24), DATA_FILENAME_24, ftp, user, pword)
 
 			if update7:
 				# Add new results
@@ -225,7 +228,7 @@ while True:
 				updateCsv((timeData7, tempData7, humiData7), DATA_FILENAME_7)
 
 				# Upload via ftp
-				uploadFtp((timeData7, tempData7, humiData7), DATA_FILENAME_7, ftp)
+				uploadFtp((timeData7, tempData7, humiData7), DATA_FILENAME_7, ftp, user, pword)
 
 		else:
 			print (timeNow)
