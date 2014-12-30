@@ -47,3 +47,5 @@ logger/data.csv
 logger/data24.csv
 logger/data7.csv
 viewer/data.csv
+*.csv
+logger/data.csv
