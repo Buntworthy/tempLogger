@@ -237,8 +237,8 @@ while True:
 		# Make sure this isn't longer than the length of the 24 hour data
 		nSamples = min(nSamples, len(tempData24))
 
-		temp = np.mean(tempData24[-nSamples:])
-		humi = np.mean(humiData24[-nSamples:])
+		temp = np.mean(tempData24[-int(nSamples):])
+		humi = np.mean(humiData24[-int(nSamples):])
 
 		# Add new results
 		(timeData7, tempData7, humiData7) = storeResults((timeNow, temp, humi),
