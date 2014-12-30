@@ -185,7 +185,7 @@ while True:
 		print('Updating 7 day data')
 
 	# Check if we have crossed to a new day and need to update the minmax value
-	if (timeCheck.toordinal() > prevReadingTimeMinMax.toordinal():
+	if (timeCheck.toordinal() > prevReadingTimeMinMax.toordinal()):
 		updateMinMax = True
 		prevReadingTimeMinMax = timeCheck
 		print('Updating MinMax data')
