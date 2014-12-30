@@ -19,6 +19,7 @@ import sys
 import time
 import datetime
 import csv
+import numpy as np
 from ftplib import FTP
 
 import Adafruit_DHT
@@ -125,15 +126,18 @@ READING_RETRIES = 5
 SETTINGS_FILENAME = 'config.csv'
 DATA_FILENAME_24  = 'data24.csv'
 DATA_FILENAME_7   = 'data7.csv'
+DATA_FILENAME_MM   = 'dataMinMax.csv'
 
 # How much data to store (hours)
 HISTORY_LENGTH_24 = 24
 HISTORY_LENGTH_7  = 7*24
+HISTORY_LENGTH_MM  = 30*7*24
 
 ###################################################
 
 prevReadingTime24 = datetime.datetime.now()
 prevReadingTime7 = datetime.datetime.now()
+prevReadingTimeMinMax = datetime.datetime.now()
 
 (timeData24, tempData24, humiData24) = readData(DATA_FILENAME_24)
 (timeData7, tempData7, humiData7) = readData(DATA_FILENAME_7)
@@ -165,8 +169,7 @@ while True:
 	timeCheck = datetime.datetime.now()
 	update24 = False
 	update7 = False
-
-	print((timeCheck - prevReadingTime24).total_seconds())
+	updateMinMax = False
 
 	if (timeCheck - prevReadingTime24).total_seconds() > SAMPLING_24:
 		update24 = True
@@ -178,7 +181,13 @@ while True:
 		prevReadingTime7 = timeCheck
 		print('Updating 7 day data')
 
-	if update24 or update7:
+	# Check if we have crossed to a new day and need to update the minmax value
+	if (timeCheck.toordinal() > prevReadingTimeMinMax.toordinal():
+		updateMinMax = True
+		prevReadingTimeMinMax = timeCheck
+		print('Updating MinMax data')
+
+	if update24:
 		
 		# Attempt to get sensor reading.
 		retries = 0;
@@ -201,35 +210,48 @@ while True:
 			print 'Humidity:    {0:0.1f} %'.format(humi)
 
 
-			if update24:
-				# Add new results
-				(timeData24, tempData24, humiData24) = storeResults((timeNow, temp, humi),
-														(timeData24, tempData24, humiData24))
-				# Remove old results
-				removeOldResults((timeData24, tempData24, humiData24), HISTORY_LENGTH_24, timeNow)
+			# Add new results
+			(timeData24, tempData24, humiData24) = storeResults((timeNow, temp, humi),
+													(timeData24, tempData24, humiData24))
+			# Remove old results
+			removeOldResults((timeData24, tempData24, humiData24), HISTORY_LENGTH_24, timeNow)
 
-				# Update csv file
-				updateCsv((timeData24, tempData24, humiData24), DATA_FILENAME_24)
+			# Update csv file
+			updateCsv((timeData24, tempData24, humiData24), DATA_FILENAME_24)
 
-				# Upload via ftp
-				uploadFtp((timeData24, tempData24, humiData24), DATA_FILENAME_24, ftp)
-
-			if update7:
-				# Add new results
-				(timeData7, tempData7, humiData7) = storeResults((timeNow, temp, humi),
-														(timeData7, tempData7, humiData7))
-				# Remove old results
-				removeOldResults((timeData7, tempData7, humiData7), HISTORY_LENGTH_7, timeNow)
-
-				# Update csv file
-				updateCsv((timeData7, tempData7, humiData7), DATA_FILENAME_7)
-
-				# Upload via ftp
-				uploadFtp((timeData7, tempData7, humiData7), DATA_FILENAME_7, ftp)
+			# Upload via ftp
+			uploadFtp((timeData24, tempData24, humiData24), DATA_FILENAME_24, ftp)
 
 		else:
 			print (timeNow)
 			print 'Temperature reading failed'
+
+	if update7:
+
+		# Take the average of the past period of data
+		nSamples = np.floor(SAMPLING_7/SAMPLING_24)
+
+		# Make sure this isn't longer than the length of the 24 hour data
+		nSamples = min(nSamples, len(tempData24))
+
+		temp = np.mean(tempData24[-nSamples:])
+		humi = np.mean(humiData24[-nSamples:])
+
+		# Add new results
+		(timeData7, tempData7, humiData7) = storeResults((timeNow, temp, humi),
+												(timeData7, tempData7, humiData7))
+		# Remove old results
+		removeOldResults((timeData7, tempData7, humiData7), HISTORY_LENGTH_7, timeNow)
+
+		# Update csv file
+		updateCsv((timeData7, tempData7, humiData7), DATA_FILENAME_7)
+
+		# Upload via ftp
+		uploadFtp((timeData7, tempData7, humiData7), DATA_FILENAME_7, ftp)
+
+	if updateMinMax:
+		# Update the min max data and files
+		pass
 
 	# Wait until the next reading
 	time.sleep(FREQUENCY_SECONDS)
