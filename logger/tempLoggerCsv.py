@@ -237,8 +237,8 @@ while True:
 		# Make sure this isn't longer than the length of the 24 hour data
 		nSamples = min(nSamples, len(tempData24))
 
-		temp = np.mean(tempData24[-int(nSamples):])
-		humi = np.mean(humiData24[-int(nSamples):])
+		temp = np.mean(np.double(tempData24[-int(nSamples):]))
+		humi = np.mean(np.double(humiData24[-int(nSamples):]))
 
 		# Add new results
 		(timeData7, tempData7, humiData7) = storeResults((timeNow, temp, humi),
@@ -250,7 +250,7 @@ while True:
 		updateCsv((timeData7, tempData7, humiData7), DATA_FILENAME_7)
 
 		# Upload via ftp
-		uploadFtp((timeData7, tempData7, humiData7), DATA_FILENAME_7, ftp)
+		uploadFtp((timeData7, tempData7, humiData7), DATA_FILENAME_7, ftp, user, pword)
 
 	if updateMinMax:
 		# Update the min max data and files
