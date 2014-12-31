@@ -90,6 +90,16 @@ def updateCsv((timeData, tempData, humiData), DATA_FILENAME):
 		dataWriter.writerow((timeData[idx],tempData[idx],humiData[idx]))
 	dataFile.close()
 
+def updateCsvMM((timeData, tempData, humiData), DATA_FILENAME):
+
+	# Update the csv file
+	dataFile = open(DATA_FILENAME,'wb')
+	dataWriter = csv.writer(dataFile)
+	# Write the headers
+	dataWriter.writerow(('Time','Min','Max'))
+	for idx, data in enumerate(timeData):
+		dataWriter.writerow((timeData[idx],tempData[idx],humiData[idx]))
+	dataFile.close()
 
 def uploadFtp((timeData, tempData, humiData), DATA_FILENAME, ftp, user, pword):
 
@@ -144,6 +154,7 @@ prevReadingTimeMinMax = datetime.datetime.now()
 
 (timeData24, tempData24, humiData24) = readData(DATA_FILENAME_24)
 (timeData7, tempData7, humiData7) = readData(DATA_FILENAME_7)
+(timeDataMM, minDataMM, maxDataMM) = readData(DATA_FILENAME_MM)
 
 # Load the FTP access details
 configFile = open(SETTINGS_FILENAME,'rb')
@@ -254,7 +265,22 @@ while True:
 
 	if updateMinMax:
 		# Update the min max data and files
-		pass
+		# Take the min and max of the past 24 hours
+		
+		tempMin = min(tempData24)
+		tempMax = max(humiData24)
+
+		# Add new results
+		(timeDataMM, minDataMM, maxDataMM) = storeResults((timeNow, tempMin, tempMax),
+												(timeDataMM, minDataMM, maxDataMM))
+		# Remove old results
+		removeOldResults((timeDataMM, minDataMM, maxDataMM), HISTORY_LENGTH_MM, timeNow)
+
+		# Update csv file
+		updateCsvMM((timeDataMM, minDataMM, maxDataMM), DATA_FILENAME_MM)
+
+		# Upload via ftp
+		uploadFtp((timeDataMM, minDataMM, maxDataMM), DATA_FILENAME_MM, ftp, user, pword)
 
 	# Wait until the next reading
 	time.sleep(FREQUENCY_SECONDS)
