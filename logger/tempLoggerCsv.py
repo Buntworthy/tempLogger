@@ -90,6 +90,16 @@ def updateCsv((timeData, tempData, humiData), DATA_FILENAME):
 		dataWriter.writerow((timeData[idx],tempData[idx],humiData[idx]))
 	dataFile.close()
 
+def updateCsvMM((timeData, tempData, humiData), DATA_FILENAME):
+
+	# Update the csv file
+	dataFile = open(DATA_FILENAME,'wb')
+	dataWriter = csv.writer(dataFile)
+	# Write the headers
+	dataWriter.writerow(('Time','Min','Max'))
+	for idx, data in enumerate(timeData):
+		dataWriter.writerow((timeData[idx],tempData[idx],humiData[idx]))
+	dataFile.close()
 
 def uploadFtp((timeData, tempData, humiData), DATA_FILENAME, ftp, user, pword):
 
@@ -267,7 +277,7 @@ while True:
 		removeOldResults((timeDataMM, minDataMM, maxDataMM), HISTORY_LENGTH_MM, timeNow)
 
 		# Update csv file
-		updateCsv((timeDataMM, minDataMM, maxDataMM), DATA_FILENAME_MM)
+		updateCsvMM((timeDataMM, minDataMM, maxDataMM), DATA_FILENAME_MM)
 
 		# Upload via ftp
 		uploadFtp((timeDataMM, minDataMM, maxDataMM), DATA_FILENAME_MM, ftp, user, pword)
