@@ -144,6 +144,7 @@ prevReadingTimeMinMax = datetime.datetime.now()
 
 (timeData24, tempData24, humiData24) = readData(DATA_FILENAME_24)
 (timeData7, tempData7, humiData7) = readData(DATA_FILENAME_7)
+(timeDataMM, minDataMM, maxDataMM) = readData(DATA_FILENAME_MM)
 
 # Load the FTP access details
 configFile = open(SETTINGS_FILENAME,'rb')
@@ -250,11 +251,26 @@ while True:
 		updateCsv((timeData7, tempData7, humiData7), DATA_FILENAME_7)
 
 		# Upload via ftp
-		uploadFtp((timeData7, tempData7, humiData7), DATA_FILENAME_7, ftp)
+		uploadFtp((timeData7, tempData7, humiData7), DATA_FILENAME_7, ftp, user, pword)
 
 	if updateMinMax:
 		# Update the min max data and files
-		pass
+		# Take the min and max of the past 24 hours
+		
+		tempMin = min(tempData24)
+		tempMax = max(humiData24)
+
+		# Add new results
+		(timeDataMM, minDataMM, maxDataMM) = storeResults((timeNow, tempMin, tempMax),
+												(timeDataMM, minDataMM, maxDataMM))
+		# Remove old results
+		removeOldResults((timeDataMM, minDataMM, maxDataMM), HISTORY_LENGTH_MM, timeNow)
+
+		# Update csv file
+		updateCsv((timeDataMM, minDataMM, maxDataMM), DATA_FILENAME_MM)
+
+		# Upload via ftp
+		uploadFtp((timeDataMM, minDataMM, maxDataMM), DATA_FILENAME_MM, ftp, user, pword)
 
 	# Wait until the next reading
 	time.sleep(FREQUENCY_SECONDS)
