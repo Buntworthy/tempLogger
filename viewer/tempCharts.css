@@ -59,3 +59,10 @@ div.maxval{
     background: green;
     position: absolute;
 }
+
+div.minval{
+    width: 30px;
+    height: 20px;
+    background: green;
+    position: absolute;
+}

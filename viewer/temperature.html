@@ -167,7 +167,7 @@
                                 return - barYScale(d.Max) + barYScale(d.Min);
                             });
 
-                        graphMinMax.selectAll("text")
+                        graphMinMax.append("g").selectAll("text")
                             .data(datasetMinMax)
                             .enter()
                             .append("text")
@@ -185,7 +185,26 @@
                                 return barYScale(d.Max) - 50;
                             });
 
-                            graphMinMax.selectAll("rect").on("mouseover", function(d,i){
+                        graphMinMax.append("g").selectAll("text")
+                            .data(datasetMinMax)
+                            .enter()
+                            .append("text")
+                            .attr("class","minval")
+                            .attr("text-anchor", "middle")
+                            .style("opacity", 0)
+                            .text(function(d){
+                                var tempFormat = d3.format(".1f");
+                                return tempFormat(d.Min);
+                            })
+                            .attr("x",function(d,i){
+                                return barXScale(i)+5;
+                            })
+                            .attr("y",function(d){
+                                return barYScale(d.Min) - 50;
+                            });
+
+                        graphMinMax.selectAll("rect")
+                            .on("mouseover", function(d,i){
                                 var temp = d3.selectAll("text.maxval");
                                 d3.select(temp[0][i])
                                 .attr("y",function(d){
@@ -198,6 +217,19 @@
                                     .attr("y",function(d){
                                         return barYScale(d.Max) - 5;
                                     });
+
+                                temp = d3.selectAll("text.minval");
+                                d3.select(temp[0][i])
+                                .attr("y",function(d){
+                                        return barYScale(d.Min) + 50;
+                                    })
+                                    .transition()
+                                    .duration(100)
+                                    .ease("linear")
+                                    .style("opacity", 1)
+                                    .attr("y",function(d){
+                                        return barYScale(d.Min) + 15;
+                                    });
                             })
                             .on("mouseleave", function(d){
                                 d3.selectAll("text.maxval")
@@ -206,7 +238,16 @@
                                     .ease("linear")
                                     .style("opacity", 0)
                                     ;
+
+                                d3.selectAll("text.minval")
+                                    .transition()
+                                    .duration(200)
+                                    .ease("linear")
+                                    .style("opacity", 0)
+                                    ;
                             });
+
+
 
                         // Add axes
                         xAxis = d3.svg.axis()
