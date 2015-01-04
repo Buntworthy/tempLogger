@@ -9,7 +9,7 @@
 # data24h.csv 
 #		- 1 measurement per min for 24 hours
 # data7d
-# 		- 1 measurement per 10 mins for 7 days
+# 		- 1 measurement per 60 mins for 7 days
 # data30d
 #		- Min/max per day for 30 days
 #
@@ -130,7 +130,7 @@ DHT_PIN  = 4
 # Sampling frequency.
 FREQUENCY_SECONDS = 5
 SAMPLING_24 = 60
-SAMPLING_7 = 10*60
+SAMPLING_7 = 60*60
 
 # How many times to retry any reading
 READING_RETRIES = 5
@@ -268,7 +268,7 @@ while True:
 		# Take the min and max of the past 24 hours
 		
 		tempMin = min(tempData24)
-		tempMax = max(humiData24)
+		tempMax = max(tempData24)
 
 		# Add new results
 		(timeDataMM, minDataMM, maxDataMM) = storeResults((timeNow, tempMin, tempMax),
