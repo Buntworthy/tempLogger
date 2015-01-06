@@ -92,7 +92,7 @@
                             d.Time = new Date(d.Time);
                         });
 
-                        dataset24 = averageTemps(data, 7);
+                        dataset24 = averageTemps(data, 1);
                         setCurrentTemp(dataset24);
                         xScale24 = generateXScale(dataset24);
                         yScale24 = generateYScale(dataset24);
@@ -162,7 +162,7 @@
                             .attr("y",function(d){
                                 return barYScale(d.Max);
                             })
-                            .attr("width",12)
+                            .attr("width",barXScale.rangeBand())
                             .attr("height",function(d){
                                 return - barYScale(d.Max) + barYScale(d.Min);
                             });
@@ -179,7 +179,7 @@
                                 return tempFormat(d.Max);
                             })
                             .attr("x",function(d,i){
-                                return barXScale(i)+5;
+                                return barXScale(i) + barXScale.rangeBand() / 2;
                             })
                             .attr("y",function(d){
                                 return barYScale(d.Max) - 50;
@@ -197,7 +197,7 @@
                                 return tempFormat(d.Min);
                             })
                             .attr("x",function(d,i){
-                                return barXScale(i)+5;
+                                return barXScale(i)+ barXScale.rangeBand() / 2;
                             })
                             .attr("y",function(d){
                                 return barYScale(d.Min) - 50;
