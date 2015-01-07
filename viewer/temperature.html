@@ -9,6 +9,10 @@
     </head>
 
     <body>
+
+        <div id="container">
+        </div>
+        
         <script type="text/javascript">
 
             //////////////// Utility functions ////////////////////////
@@ -38,12 +42,12 @@
             var xAxis, yAxis;
 
             // Make the current temperature display
-            var currentTemp = d3.select("body")
+            var currentTemp = d3.select("div#container")
                 .append("div")
                 .attr("id","currentTemp")
 
             // Make the 24 hour graph element
-            var graph24 = d3.select("body")
+            var graph24 = d3.select("div#container")
                 .append("svg")
                 .attr("width",w + margin.left + margin.right)
                 .attr("height",h + margin.top + margin.bottom)
@@ -52,7 +56,7 @@
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             // Make the 7 day graph element
-            var graph7 = d3.select("body")
+            var graph7 = d3.select("div#container")
                 .append("svg")
                 .attr("width",w + margin.left + margin.right)
                 .attr("height",h + margin.top + margin.bottom)
@@ -60,7 +64,7 @@
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             // Make the Min Max graph element
-            var graphMinMax = d3.select("body")
+            var graphMinMax = d3.select("div#container")
                 .append("svg")
                 .attr("width",w + margin.left + margin.right)
                 .attr("height",h + margin.top + margin.bottom)
@@ -74,7 +78,7 @@
                         }   
                     );
 
-            var tooltip = d3.select("body").append("div")   
+            var tooltip = d3.select("div#container").append("div")   
                 .attr("class", "tip")               
                 .style("opacity", 0);
 
@@ -456,5 +460,7 @@
 
 
         </script>
+
+
     </body>
 </html>
