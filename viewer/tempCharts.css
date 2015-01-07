@@ -1,6 +1,7 @@
 #container {
-    width: 100%;
-    max-width: 800px;
+    width: 90%;
+    max-width: 900px;
+    margin: auto;
 }
 
 path { 
@@ -38,7 +39,7 @@ svg {
 
 .axisLabel {
     font: Garamond;
-    font-size: 15px;
+    font-size: 16px;
 }
 
 #currentTemp {

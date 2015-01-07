@@ -3,6 +3,7 @@
 
     <head>
         <meta charset="utf-8">
+        <meta name=viewport content="width=device-width, initial-scale=1">
         <title>Temperature charts</title>
         <script src="d3/d3.min.js" charset="utf-8"></script>
         <link rel="stylesheet" type="text/css" href="tempCharts.css">
@@ -96,12 +97,12 @@
                             d.Time = new Date(d.Time);
                         });
 
-                        dataset24 = averageTemps(data, 1);
+                        dataset24 = averageTemps(data, 5);
                         setCurrentTemp(dataset24);
                         xScale24 = generateXScale(dataset24);
                         yScale24 = generateYScale(dataset24);
                         generateLine(graph24, dataset24, xScale24, yScale24);
-                        generateCirlces(graph24, dataset24, xScale24, yScale24);
+                        generateTooltip(graph24, dataset24, xScale24, yScale24);
                         generateAxes(graph24, xScale24, yScale24);
 
                     }
@@ -124,6 +125,7 @@
                         xScale7 = generateXScale(dataset7);
                         yScale7 = generateYScale(dataset7);
                         generateLine(graph7, dataset7, xScale7, yScale7);
+                        generateTooltip(graph7, dataset7, xScale7, yScale7);
                         generateAxes(graph7, xScale7, yScale7);
 
                     }
@@ -374,7 +376,7 @@
 
             }
 
-            function generateCirlces(thisGraph, dataset, xScale, yScale){
+            function generateTooltip(thisGraph, dataset, xScale, yScale){
 
                 var markers = thisGraph.append("g");
 
@@ -396,15 +398,8 @@
                         // Text format for the tool tip
                         var tempFormat = d3.format(".1f");
 
-                        // d3.select(this)
-                        //     .transition()        
-                        //     .duration(50)      
-                        //     .style("opacity", 0.9);
-
                         tooltip
                             .text(tempFormat(d.Temperature));
-                            //.style("left", (d3.event.pageX) + "px")     
-                            //.style("top", (d3.event.pageY - 228) + "px");
 
                         tooltip.transition()
                             .duration(200)
@@ -413,8 +408,6 @@
                             .style("left", (d3.event.pageX) + "px")     
                             .style("top", (d3.event.pageY - 30) + "px");
 
-                        //dataset24[i].Temperature += 0.1; 
-                        //generateLine(thisGraph, dataset, xScale, yScale);
                     });  
                     
             }
@@ -425,10 +418,32 @@
                   .scale(xScale)
                   .orient("bottom");
 
+                var topAxis = d3.svg.axis()
+                    .scale(xScale)
+                    .orient("top")
+                    .tickSize(-6)
+                    .tickFormat("");
+
+                var sideAxis = d3.svg.axis()
+                    .scale(yScale)
+                    .orient("right")
+                    .tickSize(-6)
+                    .tickFormat("");
+
                 thisGraph.append("g")
                     .attr("transform", "translate(0," + h + ")")
                     .attr("class", "axis")
                     .call(xAxis);
+
+                thisGraph.append("g")
+                    //.attr("transform", "translate(0," + h + ")")
+                    .attr("class", "axis")
+                    .call(topAxis);
+
+                thisGraph.append("g")
+                    .attr("transform", "translate(" + w + ",0)")
+                    .attr("class", "axis")
+                    .call(sideAxis);
 
                 yAxis = d3.svg.axis()
                   .scale(yScale)
