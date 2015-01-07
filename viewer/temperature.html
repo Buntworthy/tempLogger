@@ -35,7 +35,7 @@
 
             // Dimensions
             var margin = {top: 20, right: 20, bottom: 60, left: 60};
-            var w = 800 - margin.left - margin.right;
+            var w = parseInt(d3.select("#container").style("width")) - margin.left - margin.right;
             var h = 400 - margin.top - margin.bottom;
 
             // Variables
