@@ -28,6 +28,14 @@
                 return array.length ? sum / array.length : 0;
             }
 
+            // From http://stackoverflow.com/questions/563406/add-days-to-datetime
+            Date.prototype.addDays = function(days)
+            {
+                var dat = new Date(this.valueOf());
+                dat.setDate(dat.getDate() + days);
+                return dat;
+            }
+
             /////////////////// Define constants //////////////////////
 
             var CHANGE_THRESH = 0.25; // Degrees per hour
@@ -39,6 +47,7 @@
             var margin = {top: 20, right: 20, bottom: 60, left: 60};
             var w = containerWidth - margin.left - margin.right;
             var h = (w/1.3 - margin.top - margin.bottom);
+            var barPad = 1;
 
             // Variables
             var xAxis, yAxis;
@@ -153,9 +162,18 @@
 
             function generateBarXScale(dataset){
 
-                var xScale = d3.scale.ordinal()
-                    .domain(d3.range(dataset.length))
-                    .rangeRoundBands([0, w], 0.05);
+                var xScale = d3.time.scale()
+                    //.domain(d3.extent(dataset, function(d) { return d.Time; }))
+                    .domain([d3.min(dataset, function(d) { 
+                                return d.Time;
+                            }).addDays(-1),
+                            d3.max(dataset, function(d) {
+                                return d.Time;
+                            }).addDays(1)
+                            ])
+                    .range([0, w]);
+
+                return xScale;
 
                 return xScale
                 
@@ -164,8 +182,8 @@
             function generateBarYScale(dataset){
 
                 var yScale = d3.scale.linear()
-                    .domain([d3.min(datasetMinMax, function(d) { return Number(d.Min); }) - 0.5,
-                                d3.max(datasetMinMax, function(d) { return Number(d.Max); }) + 0.5])
+                    .domain([d3.min(dataset, function(d) { return Number(d.Min); }) - 0.5,
+                                d3.max(dataset, function(d) { return Number(d.Max); }) + 0.5])
                     .range([h, 0])  
                     .nice();
 
@@ -184,12 +202,12 @@
                     .enter()
                     .append("rect")
                     .attr("x",function(d,i){
-                        return xScale(i);
+                        return xScale(d.Time) - w/(dataset.length+2)/2;
                     })
                     .attr("y",function(d){
                         return yScale(d.Max);
                     })
-                    .attr("width",xScale.rangeBand())
+                    .attr("width",w/(dataset.length+2))
                     .attr("height",function(d){
                         return - yScale(d.Max) + yScale(d.Min);
                     });
@@ -210,7 +228,7 @@
                         return tempFormat(d.Max);
                     })
                     .attr("x",function(d,i){
-                        return xScale(i) + xScale.rangeBand() / 2;
+                        return xScale(d.Time);
                     })
                     .attr("y",function(d){
                         return yScale(d.Max) - 50;
@@ -228,7 +246,7 @@
                         return tempFormat(d.Min);
                     })
                     .attr("x",function(d,i){
-                        return xScale(i)+ xScale.rangeBand() / 2;
+                        return xScale(d.Time);
                     })
                     .attr("y",function(d){
                         return yScale(d.Min) - 50;
@@ -288,7 +306,8 @@
                 // Add axes
                 xAxis = d3.svg.axis()
                   .scale(xScale)
-                  .orient("bottom");
+                  .orient("bottom")
+                  ;
 
                 bars.append("g")
                     .attr("transform", "translate(0," + h + ")")
