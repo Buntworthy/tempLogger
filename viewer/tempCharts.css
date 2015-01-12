@@ -1,6 +1,6 @@
 #container {
     width: 90%;
-    max-width: 900px;
+    max-width: 800px;
     margin: auto;
 }
 
@@ -22,6 +22,10 @@ svg {
     shape-rendering: crispEdges;
 }
 
+path.domain {
+    stroke-width: 1;
+}
+
 #minmax rect {
     stroke:teal;
     fill:teal;
@@ -38,13 +42,13 @@ svg {
 }
 
 .axisLabel {
-    font: Garamond;
+    font-family: Garamond;
     font-size: 16px;
 }
 
 #currentTemp {
-    font: Garamond;
-    font-size: 20px;
+    font-family: Garamond;
+    font-size: 26px;
     margin: auto;
     text-align: center;
     padding: 20px;
@@ -52,8 +56,8 @@ svg {
 }
 
 div.tip {
-    width: 30px;
-    height: 20px;
+    width: auto;
+    height: auto;
     background: white;
     position: absolute;
 }
